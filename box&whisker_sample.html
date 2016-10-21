@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Sample Box Plot</title>
+	<script src="d3.min.js"></script>
+	<!-- Styling for axis -->
+	<style>
+	line {
+		shape-rendering: crispEdges;
+		stroke: #000000;
+		stroke-width: 2px;
+	}
+	line.minor {
+		stroke: #777777
+		stroke-dasharray: 2,4;
+		stroke-width: 2px;
+	}
+	
+	text {
+		font-size: 20px;
+	}
+	
+	path.domain {
+		fill: none;
+		stroke: black;
+	}
+	Axis_y.tick {
+		stroke-dasharray: 2, 4;
+	}
+	</style>
+</head>
+<body>
+	<div id="viz">
+		<svg>
+		</svg>
+	</div>
+	<div id="controls">
+	</div>
+</body>
+<footer>
+	<script>
+	//day names do not work.
+	var dayNames = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+	
+	var boxData = 
+	[
+	{name: 1, min: 14, max: 34, median: 22, q1: 19, q3: 25, number: 42},
+	{name: 2, min: 21, max: 51, median: 35, q1: 25, q3: 40, number: 42},
+	{name: 3, min: 23, max: 43, median: 27, q1: 25, q3: 34, number: 42},
+	{name: 4, min: 10, max: 34, median: 21, q1: 19, q3: 23, number: 42},
+	{name: 5, min: 17, max: 39, median: 31, q1: 22, q3: 33, number: 42},
+	{name: 6, min: 18, max: 43, median: 27, q1: 22, q3: 39, number: 42},
+	{name: 7, min: 13, max: 34, median: 21, q1: 15, q3: 24, number: 42}
+	];
+	
+	var margin = {top: 40, right: 30, bottom: 30, left: 40},
+		width = 1200 - margin.right + margin.left,
+		height = 1200 - margin.top + margin.bottom;
+	
+	var table = d3.select("svg")
+					.attr("width", width + margin.left + margin.right)
+					.attr("height", height + margin.top + margin.bottom);
+	
+	//create space for the axis.
+	var chart = table.append("g")
+				.attr("class", "chart")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	
+	//try an ordinal scale for the x Axis.
+		xScale = d3.scaleLinear().domain([0,8]).range([0,width]);
+		yScale = d3.scaleLinear().domain([0,60]).range([height,0]);
+			
+	chart.append("g")
+		.attr("transform", "translate(0,0)")
+		.attr("class", "Axis_y")
+		.call(d3.axisLeft(yScale).tickSize(-width, 0, 0));
+			
+	chart.append("g")
+		.attr("transform", "translate(0,1190)")
+		.attr("id", "Axis_x")
+		.call(d3.axisBottom(xScale).tickSize(-height, 0, 0).tickValues([1,2,3,4,5,6,7]));
+	
+	var median = chart.selectAll("circle.median")
+	.data(d3.values(boxData))
+	.enter()
+	.append("circle")
+	.attr("class", "median")
+	.attr("r", 5)
+	.attr("cx", function (d) {return xScale(d.name)})
+	.attr("cy", function(d) {return yScale(d.median)})
+	.style("fill", "darkgrey");
+	
+	chart.selectAll("g.box")
+		.data(d3.values(boxData))
+		.enter()
+		.append("g")
+		.attr("class", "box")
+		.attr("transform", function(d) 
+			{
+			return "translate("+ xScale(d.name) +","+ yScale(d.median) +")"
+			})
+				.each(function (d,i) {
+			d3.select(this)
+			.append("line")
+			.attr("class", "range")
+			.attr("x1", 0)
+			.attr("x2", 0)
+			.attr("y1", yScale(d.max) - yScale(d.median))
+			.attr("y2", yScale(d.min) - yScale(d.median))
+			.style("stroke","black")
+			.style("stroke-width", "4px");
+		})
+		.each(function(d,i)
+			{
+				d3.select(this)
+				.append("rect")
+				.attr("width", 20)
+				.attr("x", -10)
+				.attr("y", yScale(d.q3) - yScale(d.median))
+				.attr("height", yScale(d.q1) - yScale(d.q3))
+				.style("stroke", "black")
+				.style("fill", "white")
+				.style("stroke-width", "4px");
+				
+				//set min line
+				d3.select(this)
+				.append("line")
+				.attr("class", "min")
+				.attr("x1", -10)
+				.attr("x2", 10)
+				.attr("y1", yScale(d.min) - yScale(d.median))
+				.attr("y2", yScale(d.min) - yScale(d.median))
+				.style("stroke","black")
+				.style("stroke-width", "4px");
+				
+				//set max line
+				d3.select(this)
+				.append("line")
+				.attr("class", "max")
+				.attr("x1", -10)
+				.attr("x2", 10)
+				.attr("y1", yScale(d.max) - yScale(d.median))
+				.attr("y2", yScale(d.max) - yScale(d.median))
+				.style("stroke","black")
+				.style("stroke-width", "4px");
+				
+				//set median line
+				d3.select(this)
+				.append("line")
+				.attr("x1", -10)
+				.attr("x2", 10)
+				.attr("y1", 0)
+				.attr("y2", 0)
+				.style("stroke", "darkgrey")
+				.style("stroke-width", "4px");
+			});
+
+	</script>
+</footer>
+</html>
