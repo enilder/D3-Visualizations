@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Pokeplot</title>
+	<script src="d3.min.js"></script>
+	<style>
+	#Axis_x, #Axis_y {
+		font-size: 18px;
+	}
+	div.tooltip {
+	position: absolute;
+	text-align: center;
+	width: 90px;
+	padding: 2px;
+	font: 15px sans-serif;
+	background: lightsteelblue;
+	border: 0px;
+	border-radius: 8px;
+	pointer-events: none;
+	}
+	</style>
+</head>
+<body>
+	<svg>
+		<div class="tooltip"></div>
+	</svg>
+	<div id="controls"></div>
+</body>
+<footer>
+	<script>
+	
+	var scatter_vals = [
+	{name: "Squirtle", type:"water", power: 5, def: 10}, 
+	{name: "Absol", type:"dark", power: 8, def: 4}, 
+	{name: "Charmander", type:"fire", power: 10, def: 16},
+	{name: "Bulbasaur", type:"grass", power: 12, def: 7},
+	{name: "Geodude", type:"rock", power: 9, def: 12},
+	{name: "Magikarp", type:"water", power: 5, def: 3},
+	{name: "Diglett", type:"ground", power: 6, def: 8}
+	];
+	
+	var second_vals = [	{name: "Charmander", type:"fire", power: 10, def: 16},
+						{name: "Bulbasaur", type:"grass", power: 12, def: 7}]
+		
+	var pokeTypes = ["fire", "water", "grass", "ground", "rock", "dark"];
+	
+	var margin = {top: 40, right: 20, bottom: 30, left: 40},
+		width = 1200 - margin.left + margin.right,
+		height = 1200 - margin.top + margin.bottom;
+	
+	var dataArea = d3.select("svg")
+					.attr("width", width + margin.left + margin.right)
+					.attr("height", height + margin.top + margin.bottom);
+	
+	var chart = dataArea.append("g")
+				.attr("class", "chart")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+	var div = d3.select("div.tooltip")
+				.style("opacity", 0);
+	
+	//append x & y scales.
+	xScale = d3.scaleLinear().domain([0,20]).range([0,width]);
+	yScale = d3.scaleLinear().domain([0,20]).range([height,0]);	
+	
+	var points = chart.selectAll("g.points")
+			.data(d3.values(scatter_vals))
+			.enter()
+			.append("g")
+			.attr("class", "points")
+			.attr("transform", function(d) {return "translate (" + xScale(d.power) + "," + yScale(d.def) + ")";} );
+
+	points.append("circle")
+			.attr("r", 5)
+			.attr("fill", "steelblue")
+			.on("mouseout", unHighlight)
+			.on("mouseover", highlightRegion);
+		
+	//append axis past the dots
+	chart.append("g")
+		.attr("transform", "translate(0,0)")
+		.attr("id", "Axis_y")
+		.call(d3.axisLeft(yScale).tickSize(-width, 0, 0));
+
+	chart.append("g")
+		.attr("transform", "translate(0,1190)")
+		.attr("id", "Axis_x")
+		.call(d3.axisBottom(xScale).tickSize(-height, 0, 0));
+		
+	//highlight & unhighlight elements being examined
+	function highlightRegion(d) {
+		d3.select(this)
+		.style("fill", function () {return "red";
+		});
+		div.transition()
+			.duration(200)
+			.style("opacity", .9);
+		div.html(d.name + "<br/>" + d.power + "<br/>" + d.def)
+			.style("left", (d3.event.pageX) + "px")
+			.style("top", (d3.event.pageY - 28) + "px");
+	};
+	
+	function unHighlight(d) {
+		d3.select(this)
+		.style("fill", function() {return "steelblue"
+		})
+		div.transition()
+		.duration(500)
+		.style("opacity", 0);
+	};
+	
+	//generate buttons
+	d3.select("#controls").selectAll("button.types")
+		.data(pokeTypes).enter()
+		.append("button")
+		.attr("class", "types")
+		.on("click", pokeFilter)
+		.html(function(d) {return d;});
+	
+	//Populate the scatterplot.
+
+	//Filter function by type
+	function pokeFilter(pokeType, scatter_vals) {
+		console.log(pokeType);
+		//update points
+		points
+		.data(d3.values(scatter_vals))
+		.filter(function (d, pokeType) {return pokeType == d.name})
+		.enter()		
+		.append("g")
+		.attr("transform", function(d) {return "translate (" + xScale(d.power) + "," + yScale(d.def) + ")";});
+		
+		points
+		.append("circle")
+		.attr("r", 5)
+		.attr("fill", "steelblue")
+		.on("mouseout", unHighlight)
+		.on("mouseover", highlightRegion)
+		.exit()
+		.remove();
+		/*
+		var filterArray = points.filter(
+			function (val) {return pokeType == val.name}
+		)
+		chart.selectAll("g")
+		.data(d3.values(filterArray))
+		.append("g")
+		.attr("transform", function(d) {return "translate (" + xScale(d.power) + "," + yScale(d.def) + ")";})
+		.append("circle")
+		.attr("r", 5)
+		.attr("fill", "steelblue")
+		.on("mouseout", unHighlight)
+		.on("mouseover", highlightRegion)
+		.exit()
+		.remove();
+		*/
+	}
+	
+	//Regex function for filter
+	
+	</script>
+</footer>
+</html>
