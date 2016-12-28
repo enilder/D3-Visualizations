@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="d3.min.js"></script>
+	<style>
+	body {
+		font: 10px sans-serif;
+	}
+	.axis path,
+	.axis line {
+		fill: none;
+		stroke: #000;
+		shape-rendering: crispEdges;
+	}
+
+	.bar {
+		fill: steelblue;
+	}
+
+	.x-Axis path {
+		display: none;
+	}
+
+	text {
+		fill: #000;
+	}
+	</style>
+</head>
+<body>
+	<div>
+		<svg class="chart">
+		</svg>
+	</div>
+</body>
+<footer>
+	<script>
+	//grouped data
+	var groupedData = [{"name": "Edge", "2015": 1600, "2016": 1875},
+				{"name": "F-150", "2015": 2100, "2016": 2561},
+				{"name": "Cruze", "2015": 3100, "2016": 2600},
+				{"name": "Rav-4", "2015": 1600, "2016": 1875},
+				{"name": "Civic", "2015": 2400, "2016": 2155},
+				{"name": "Rogue", "2015": 1600, "2016": 1875}
+				];
+
+
+	var margin = {top: 20, right: 20, bottom: 30, left: 40},
+		width = 960 - margin.left - margin.top,
+		height = 500 - margin.top - margin.bottom;
+
+	var xCategories = d3.scaleBand()
+		.range([0, width])
+		.padding(0.1)
+		.align(0.1);
+
+	var xGroups = d3.scaleBand()
+		.padding(0.1);
+
+	var yScale = d3.scaleLinear()
+			.range([height, 0]);
+
+	//colors for 2015 and 2016 years
+	var colors = d3.scaleOrdinal()
+		.range(["#74a1c7", "#4682b4"]);
+
+	var svg = d3.select("body").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	//ordinal scale for the data. maps names of each vehicle to the scale
+	vehicleNames = groupedData.map(function(d) {return d.name;});
+	console.log(vehicleNames);
+
+	//vehicleNames2 = d3.map(d3.keys(groupedData), function(d) {return d.name});
+	//pull all key values for the year values
+	var yearNames = d3.keys(groupedData[0]).filter(function(key) { return key !== "name"; });
+	console.log("year names: " + yearNames);
+
+	//set x domain for ordinal scale to be equal to vehicle names.
+	xCategories.domain(vehicleNames);
+
+	//set the x domain for the year names
+	xGroups.domain(yearNames).range([0, xCategories.bandwidth()]);
+
+	//set y domain for linear scale to be equal to vehicle sales.
+	yScale.domain([0, 3500]);
+
+	//iterate over and create a nested array titled sales that contains sales figures for the vehicles
+	groupedData.forEach(function(d) {
+		d.sales = yearNames.map(function(year) {return { year: year, value: +d[year]}})
+	})
+
+	svg.append("g")
+		.attr("transform", "translate(0,0)")
+		.attr("class", "y-Axis")
+		.call(d3.axisLeft(yScale).tickSize(0, 0, 0))
+		.append("text")
+		.attr("transform", "rotate(-90)")
+		.attr("y", 6)
+		.attr("dy", ".71em")
+		.style("text-anchor", "end")
+		.text("Vehicles Sold");
+
+	console.log("--0--");
+
+	svg.append("g")
+		.attr("transform", "translate(0," + height +")")
+		.attr("class", "x-Axis")
+		.call(d3.axisBottom(xCategories).tickSize(0, 5, 0));
+
+	var bars = svg.selectAll(".bar-chart")
+			.data(groupedData)
+			.enter()
+			.append("g")
+			.attr("class", "vehicle-bar")
+			.attr("transform", function(d) {
+				console.log(d.name);
+			 	return "translate(" + xCategories(d.name) + ",0)"
+			});
+
+	bars.selectAll("rect")
+			.data(function(d) {return d.sales; })
+			.enter()
+			.append("rect")
+			.attr("width", (xCategories.bandwidth() / 2))
+			.attr("x", function (d) {return xGroups(d.year);})
+			.attr("y", function(d) {return yScale(d.value);})
+			.attr("height", function(d) {return height - yScale(d.value);})
+			.style("fill", function(d) {return colors(d.year)});
+
+	//add legend
+	var legend = svg.selectAll(".legend")
+		.data(yearNames.slice().reverse())
+		.enter()
+		.append("g")
+		.attr("class", "legend")
+		.attr("transform", function(d, i) {return "translate(0," + i * 20 + ")";});
+
+	legend.append("rect")
+		.attr("x", width - 18)
+		.attr("width", 18)
+		.attr("height", 18)
+		.style("fill", colors);
+
+
+	legend.append("text")
+		.attr("x", width - 24)
+		.attr("y", 9)
+		.attr("dy", ".35em")
+		.style("text-anchor", "end")
+		.text(function(d) {return d;});
+
+	//add tooltip
+
+	</script>
+</footer>
+</html>
